@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include<stdbool.h>
 #define discos 4
 #define pinos 3
 
@@ -34,6 +35,11 @@ struct fila{
     struct fila *prox;    
 };
 
+typedef struct{
+	bool aberto;
+	int anterior_menor, anterior_maior;
+	int d_menor, d_maior;
+}MapDij;
 
 //Funções referntes ao CRUD de uma Pilha
 PILHA *inserirPilha(PILHA *p, int v){
@@ -256,73 +262,6 @@ void buscaProfundidade_Grafo(Grafo *gr, int ini, int *visitado, int possibilidad
 	printf("\nQuantidade de cidades: %f\n",menor_p->qtd_elementos);
 }
 
-//#####################################################################################
-void inicializaD(Grafo *gr, int *d, int *p, int s){
-	int v;
-	for(v=0; v < gr->nro_vertices; v++){
-		d[v] = INFINITY;
-		p[v] = -1;
-	}
-	d[s] = 0;
-}
-void relaxa(Grafo *gr, int *d, int *p, int u, int v){
-	ADJACENCIA *ad = gr->grau[u].cab;
-	while(ad && ad->vertice != v)
-		ad = ad->prox;
-	if( ad ){
-		if( d[v] > d[u] + 1){
-			d[v] = d[u] + 1;
-			p[v] = u;
-		}
-	}
-}
-bool existeAberto(Grafo *gr, int *aberto){
-	for(int i=0; i< gr->nro_vertices; i++){
-		if(aberto[i]) return true;
-	}
-	return false;
-}
-int menorDist(Grafo *gr, int *aberto, int *d){
-	int i;
-	for(i=0; i<gr->nro_vertices; i++)
-		if(aberto[i]) break;
-	if( i== g->nro_vertices) return -1;
-	int menor = i;
-	for(i = menor+1; i< gr->nro_vertices; i++)
-		if(aberto[i] && d[menor]>d[i])
-			menor = i;
-	return menor;
-}
-
-int *buscaDijkstra(Grafo *gr, int s){
-	int *d = (int*) malloc(gr->nro_vertices*sizeof(int));
-	int p[gr->nro_vertices];
-	bool aberto[gr->nro_vertices];
-
-	inicializaD(gr,d,p,s);
-
-	for(int i=0; i< gr->nro_vertices; i++)
-		aberto[i] = true;
-
-	while( existeAberto(gr, aberto)) {
-		int u = menorDist(gr, aberto, d);
-		aberto[u] = false;
-		ADJACENCIA *ad = gr->grau[u].cab;
-		while( ad ){
-			relaxa(gr, d, p, u, ad->vertice);
-			ad = ad->prox;
-		}
-	}
-	return d;
-}
-
-
-void buscaDijkstra_Grafo(Grafo *gr, int ini){
-	// SUBSTITUIR 0 por INI
-	int *r = buscaDijkstra(gr, 0);
-}
-//#####################################################################################
-
 
 //Funções para colocar nivel nos vertices do grafo.
 Fila *appendFila(Fila *F, int raiz){
@@ -411,6 +350,115 @@ int equivalente(int **estadoTorre, int *vet){
     return resul;
 }
 
+
+//#####################################################################################
+/*
+void inicializaD(Grafo *gr, int *d, int *p, int s){
+	int v;
+	for(v=0; v < gr->nro_vertices; v++){
+		d[v] = INFINITY;
+		p[v] = -1;
+	}
+	d[s] = 0;
+}
+void relaxa(Grafo *gr, int *d, int *p, int u, int v){
+	ADJACENCIA *ad = gr->grau[u].cab;
+	while(ad && ad->vertice != v)
+		ad = ad->prox;
+	if( ad ){
+		if( d[v] > d[u] + 1){
+			d[v] = d[u] + 1;
+			p[v] = u;
+		}
+	}
+}
+int *buscaDijkstra(Grafo *gr, int s){
+	int *d = (int*) malloc(gr->nro_vertices*sizeof(int));
+	int p[gr->nro_vertices];
+	bool aberto[gr->nro_vertices];
+
+	inicializaD(gr,d,p,s);
+
+	for(int i=0; i< gr->nro_vertices; i++)
+		aberto[i] = true;
+
+	while( existeAberto(gr, aberto)) {
+		int u = menorDist(gr, aberto, d);
+		aberto[u] = false;
+		ADJACENCIA *ad = gr->grau[u].cab;
+		while( ad ){
+			relaxa(gr, d, p, u, ad->vertice);
+			ad = ad->prox;
+		}
+	}
+	return d;
+}
+void buscaDijkstra_Grafo(Grafo *gr, int ini){
+	// SUBSTITUIR 0 por INI
+	int *r = buscaDijkstra(gr, 0);
+}
+*/
+bool existeAberto(Grafo *gr, MapDij *mapa){
+	for(int i=0; i< gr->nro_vertices; i++){
+		if(mapa[i].aberto) return true;
+	}
+	return false;
+}
+
+int menorDist(Grafo *gr, MapDij *mapa){
+	int i;
+	for(i=0; i<gr->nro_vertices; i++)
+		if(mapa[i].aberto) break;
+	if( i== gr->nro_vertices) return -1;
+	int menor = i;
+	for(i = menor+1; i< gr->nro_vertices; i++)
+		if(mapa[i].aberto && mapa[menor].d_menor > mapa[i].d_menor)
+			menor = i;
+	return menor;
+}
+
+MapDij* criar_mapa(int possibilidades){
+	MapDij *mapa = (MapDij*) malloc(possibilidades * sizeof(MapDij));
+	for(int x=0; x<possibilidades; x++){
+		mapa[x].aberto = true;
+		mapa[x].anterior_maior = -1;
+		mapa[x].d_maior = 0;
+		mapa[x].anterior_menor = -1;
+		mapa[x].d_menor = INFINITY;
+	}
+	mapa[80].anterior_menor = 0;
+	return mapa;
+}
+
+void relaxa(Grafo *gr, MapDij *mapa, int u, int v){	
+	
+	int i=0;
+	while(i<gr->grau[u] && gr->arestas[u][i] != v){
+		i++;
+	}
+	if(mapa[v].d_menor > mapa[u].d_menor+1){
+		mapa[v].d_menor = mapa[u].d_menor+1;
+		mapa[v].anterior_menor = u;
+	}
+}
+
+void construirDijkstra(Grafo *gr, MapDij *mapa){
+	while(existeAberto(gr, mapa)){
+		int u = menorDist(gr, mapa);
+		printf("{%d} ", u);
+		mapa[u].aberto = false;
+
+		for(int i=0; i<gr->grau[u]; i++){
+			if(gr->nivel[gr->arestas[u][i]-1] >= gr->nivel[u])
+			relaxa(gr, mapa, u, gr->arestas[u][i]);
+			//if(!visitado[gr->arestas[ini][i]-1] && gr->nivel[gr->arestas[ini][i]-1] >= gr->nivel[ini])
+				//buscaProfundidade(gr, gr->arestas[ini][i]-1, visitado, cont+1, pilha, maior_p, menor_p);
+		}
+	}
+}
+//#####################################################################################
+
+
 int main(){
  	
 	int possibilidades = pow(pinos,discos);
@@ -421,9 +469,16 @@ int main(){
 	
 	int *visitados = (int*) calloc(possibilidades+1, sizeof(int));
 	
+	MapDij *mapa = criar_mapa(possibilidades);
+
 	construirGrafo(grafo, estadoTorre, possibilidades);
-	
+
 	nivelLargura(grafo,0);
+
+	construirDijkstra(grafo, mapa);
+	for(int i=0; i<grafo->nro_vertices; i++){
+		printf(" %d |{%d} {%d} {%d}\n",i, mapa[i].d_menor, mapa[i].anterior_menor, mapa[i].aberto );
+	}
 
 	int vet[4];
 	printf("Digite  posição de inicio (Ex: [1 1 1 1]): ");
