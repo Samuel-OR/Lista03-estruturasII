@@ -426,7 +426,7 @@ MapDij* criar_mapa(int possibilidades){
 		mapa[x].anterior_menor = -1;
 		mapa[x].d_menor = INFINITY;
 	}
-	mapa[80].anterior_menor = 0;
+	mapa[80].d_menor = 0;
 	return mapa;
 }
 
@@ -445,7 +445,7 @@ void relaxa(Grafo *gr, MapDij *mapa, int u, int v){
 void construirDijkstra(Grafo *gr, MapDij *mapa){
 	while(existeAberto(gr, mapa)){
 		int u = menorDist(gr, mapa);
-		printf("{%d} ", u);
+		printf("ok\n");
 		mapa[u].aberto = false;
 
 		for(int i=0; i<gr->grau[u]; i++){
@@ -469,17 +469,26 @@ int main(){
 	
 	int *visitados = (int*) calloc(possibilidades+1, sizeof(int));
 	
-	MapDij *mapa = criar_mapa(possibilidades);
-
 	construirGrafo(grafo, estadoTorre, possibilidades);
 
 	nivelLargura(grafo,0);
 
+	//DIJKSTRA
+	MapDij *mapa = criar_mapa(possibilidades);
+
 	construirDijkstra(grafo, mapa);
 	for(int i=0; i<grafo->nro_vertices; i++){
-		printf(" %d |{%d} {%d} {%d}\n",i, mapa[i].d_menor, mapa[i].anterior_menor, mapa[i].aberto );
+		printf("%d {%d}|",i+1, grafo->nivel[i]);
+		for(int y =0; y< grafo->grau[i]; y++){
+			printf("%d ",grafo->arestas[i][y]);
+		}
+		printf("\n");
 	}
 
+	for(int i=0; i<grafo->nro_vertices; i++)
+		//printf(" %d |{%d} {%d} {%d}\n",i, mapa[i].d_menor, mapa[i].anterior_menor, mapa[i].aberto );
+
+	/*
 	int vet[4];
 	printf("Digite  posição de inicio (Ex: [1 1 1 1]): ");
 	scanf("%d %d %d %d", &vet[0], &vet[1], &vet[2], &vet[3]);
@@ -487,5 +496,6 @@ int main(){
 	int inicio = equivalente(estadoTorre,vet);
 	printf("Inicio: %d (%d)\n",inicio+1,inicio );
 	buscaProfundidade_Grafo(grafo, inicio, visitados, possibilidades);
+	*/
 	return 0;
 }
