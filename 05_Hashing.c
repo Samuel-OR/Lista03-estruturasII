@@ -54,13 +54,13 @@ int hashing_A(char* matricula,int* ocupado, int *colisoes, int cheio){
 					)%tamanho;
 	int novo = posHashing;
 	int primeiroNUM  = matricula[4]-48;
-	
 	if(cheio==0){
-		
+
 		//Enquanto estiver ocupado e chave ser melhor que tamanho
-		while( have_collision(ocupado, novo)==1 && novo < tamanho){ 	
-			novo = (novo+primeiroNUM);
+		while( novo < tamanho && have_collision(ocupado, novo)==1){ 	
 			(*colisoes)++;					//Gera nova chave e conta colisão
+			novo = (novo+primeiroNUM);
+			
 			if(primeiroNUM==0)				//Evitar loop somando 0
 				break;
 		}
@@ -68,6 +68,7 @@ int hashing_A(char* matricula,int* ocupado, int *colisoes, int cheio){
 			posHashing = novo;
 	
 	}else{
+		//cheio
 		(*colisoes)++;
 	}
 	return posHashing;
@@ -95,8 +96,10 @@ int hashing_B(char* matricula,int* ocupado, int *colisoes, int cheio){
 			novo += 7;
 			(*colisoes)++;	//Gera nova chave e conta colisão
 		}
+		
 		if(novo < tamanho)	//Se encontrou uma posição desocupada
 			posHashing = novo;
+
 	}else{
 		(*colisoes)++;
 	}
@@ -130,19 +133,21 @@ int main(){
 				posB = hashing_B(func[i].matricula, ocupadoB, &colisoesB, 0);
 			}else{
 				posA = hashing_A(func[i].matricula, ocupadoA, &colisoesA, 1);
+				posB = hashing_B(func[i].matricula, ocupadoB, &colisoesB, 1);
 			}
 		*/
 		posA = hashing_A(func[i].matricula, ocupadoA, &colisoesA, cheio(ocupadoA));
 		posB = hashing_B(func[i].matricula, ocupadoB, &colisoesB, cheio(ocupadoB));
 		ocupadoA[posA] = 1;
-		ocupadoB[posB] = 1;
+		ocupadoB[posB] = 1;	
 	}
+
 	printf("Colisoes_A[%d]: %d\n",tamanho,colisoesA );
 	printf("Colisoes_B[%d]: %d\n\n",tamanho, colisoesB );
 	
 	colisoesA = 0;
 	colisoesB = 0;
-
+	
 	free(ocupadoA);
 	free(ocupadoB);
 	
