@@ -3,7 +3,7 @@
 #include<stdbool.h>
 #include <string.h>
 int totalFunc = 1000;
-int tamanho = 101	;
+int tamanho = 101;
 
 typedef struct{
 	char matricula[7];
@@ -42,9 +42,9 @@ void setEntrada(FUNCIONARIO *func){
 }
 
 int have_collision(int *ocupado, int num){
-	if(ocupado[num])
-		return true;
-	return false;
+	if(ocupado[num]==1)
+		return 1;
+	return 0;
 }
 
 int hashing_A(char* matricula,int* ocupado, int *colisoes, int cheio){
@@ -58,7 +58,7 @@ int hashing_A(char* matricula,int* ocupado, int *colisoes, int cheio){
 	if(cheio==0){
 		
 		//Enquanto estiver ocupado e chave ser melhor que tamanho
-		while( have_collision(ocupado, novo) && novo < tamanho){ 	
+		while( have_collision(ocupado, novo)==1 && novo < tamanho){ 	
 			novo = (novo+primeiroNUM);
 			(*colisoes)++;					//Gera nova chave e conta colisão
 			if(primeiroNUM==0)				//Evitar loop somando 0
@@ -91,16 +91,25 @@ int hashing_B(char* matricula,int* ocupado, int *colisoes, int cheio){
 	if(cheio==0){
 
 		//Enquanto estiver ocupado e chave ser melhor que tamanho
-		while( have_collision(ocupado, novo) && novo < tamanho){
+		while( have_collision(ocupado, novo)==1 && novo < tamanho){
 			novo += 7;
 			(*colisoes)++;	//Gera nova chave e conta colisão
 		}
 		if(novo < tamanho)	//Se encontrou uma posição desocupada
 			posHashing = novo;
 	}else{
-			(*colisoes)++;
+		(*colisoes)++;
 	}
 	return posHashing;
+}
+
+int cheio(int *ocupado){
+	for(int i = 0; i<tamanho; i++){
+		if(ocupado[i] == 0){
+			return 0;		
+		}
+	}
+	return 1;		
 }
 
 int main(){
@@ -109,21 +118,24 @@ int main(){
 	func = (FUNCIONARIO*) calloc(totalFunc, sizeof(FUNCIONARIO));
 	int colisoesA=0, posA;
 	int colisoesB=0, posB;
-	int *ocupadoA = (int*) calloc(sizeof(int),tamanho);
-	int *ocupadoB = (int*) calloc(sizeof(int),tamanho);
+	int *ocupadoA = (int*) calloc(tamanho, sizeof(int));
+	int *ocupadoB = (int*) calloc(tamanho, sizeof(int));
+
 	setEntrada(func);
 
-
 	for(int i=0; i<totalFunc; i++){
-		if(i < tamanho){
-			posA = hashing_A(func[i].matricula, ocupadoA, &colisoesA, 0);
-			posB = hashing_B(func[i].matricula, ocupadoB, &colisoesB, 0);
-		}else{
-			posA = hashing_A(func[i].matricula, ocupadoA, &colisoesA, 1);
-			posB = hashing_B(func[i].matricula, ocupadoB, &colisoesB, 1);
-		}
-		ocupadoA[posA] = true;
-		ocupadoB[posB] = true;
+		/*
+			if(i < tamanho){
+				posA = hashing_A(func[i].matricula, ocupadoA, &colisoesA, 0);
+				posB = hashing_B(func[i].matricula, ocupadoB, &colisoesB, 0);
+			}else{
+				posA = hashing_A(func[i].matricula, ocupadoA, &colisoesA, 1);
+			}
+		*/
+		posA = hashing_A(func[i].matricula, ocupadoA, &colisoesA, cheio(ocupadoA));
+		posB = hashing_B(func[i].matricula, ocupadoB, &colisoesB, cheio(ocupadoB));
+		ocupadoA[posA] = 1;
+		ocupadoB[posB] = 1;
 	}
 	printf("Colisoes_A[%d]: %d\n",tamanho,colisoesA );
 	printf("Colisoes_B[%d]: %d\n\n",tamanho, colisoesB );
@@ -131,21 +143,28 @@ int main(){
 	colisoesA = 0;
 	colisoesB = 0;
 
-	ocupadoA = (int*) calloc(sizeof(int),tamanho);
-	ocupadoB = (int*) calloc(sizeof(int),tamanho);
+	free(ocupadoA);
+	free(ocupadoB);
+	
+	ocupadoA = (int*) calloc(tamanho, sizeof(int));
+	ocupadoB = (int*) calloc(tamanho, sizeof(int));
 
 	tamanho = 150;
 
 	for(int i=0; i<totalFunc; i++){
-		if(i < tamanho){
-			posA = hashing_A(func[i].matricula, ocupadoA, &colisoesA, 0);
-			posB = hashing_B(func[i].matricula, ocupadoB, &colisoesB, 0);
-		}else{
-			posA = hashing_A(func[i].matricula, ocupadoA, &colisoesA, 1);
-			posB = hashing_B(func[i].matricula, ocupadoB, &colisoesB, 1);
-		}
-		ocupadoA[posA] = true;
-		ocupadoB[posB] = true;
+		/*
+			if(i < tamanho){
+				posA = hashing_A(func[i].matricula, ocupadoA, &colisoesA, 0);
+				posB = hashing_B(func[i].matricula, ocupadoB, &colisoesB, 0);
+			}else{
+				posA = hashing_A(func[i].matricula, ocupadoA, &colisoesA, 1);
+				posB = hashing_B(func[i].matricula, ocupadoB, &colisoesB, 1);
+			}
+		*/
+		posA = hashing_A(func[i].matricula, ocupadoA, &colisoesA, cheio(ocupadoA));
+		posB = hashing_B(func[i].matricula, ocupadoB, &colisoesB, cheio(ocupadoB));
+		ocupadoA[posA] = 1;
+		ocupadoB[posB] = 1;
 	}
 	printf("Colisoes_A[%d]: %d\n",tamanho,colisoesA );
 	printf("Colisoes_B[%d]: %d\n",tamanho,colisoesB );
