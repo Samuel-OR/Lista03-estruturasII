@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <limits.h>
 #include<stdbool.h>
 #define discos 4
 #define pinos 3
@@ -17,64 +18,11 @@ typedef struct{
 	int nivel[81];
 }Grafo;
 
-typedef struct pi PILHA;
-struct pi{
-	int n;
-    PILHA *prox;
-};
-
-typedef struct m_pilha maior_pilha;
-struct m_pilha{
-	float qtd_elementos;
-	PILHA *caminho;
-};
-
 typedef struct fila Fila;
 struct fila{
     int vertice;
     struct fila *prox;    
 };
-
-typedef struct{
-	bool aberto;
-	int anterior;
-	int d_menor;
-}MapDij;
-
-//Funções referntes ao CRUD de uma Pilha
-PILHA *inserirPilha(PILHA *p, int v){
-	PILHA *cel=(PILHA*)malloc(sizeof(PILHA));
-    cel->n=v;
-    cel->prox=p;
-    return cel;
-}
-void mostrarPilha(PILHA *pilha){
-	if(pilha != NULL){
-		mostrarPilha(pilha->prox);
-		printf("%d ", pilha->n+1);
-	}
-}
-void removerPilha(PILHA **pilha){
-	PILHA *aux;
-    aux=*pilha;
-    if(*pilha != NULL){
-        (*pilha)=(*pilha)->prox;
-        free(aux);
-        aux = NULL;
-    }
-}
-void copiarPilha(PILHA **p1,PILHA **p2){
-	PILHA *aux = (PILHA *)malloc(sizeof(PILHA));
-	if(*p1 == NULL){
-        *p2 = NULL;
-    }else{
-        copiarPilha(&(*p1)->prox,p2);
-        aux->n = (*p1)->n;
-        aux->prox=*p2;
-        *p2 = aux;
-    }
-}
-
 
 //Funçõs para criar o grafo e gerar os estados da torre de hanói
 Grafo* cria_Grafo(int nro_vertices, int grau_max, int eh_ponderado){
@@ -201,68 +149,6 @@ void construirGrafo(Grafo *grafo, int **estadoTorre, int possibilidades){
 	}
 }
 
-
-//Funcção para realizar a busca no grafo
-void buscaProfundidade(Grafo *gr, int ini, int *visitado, int cont, PILHA *pilha, maior_pilha *maior_p,  maior_pilha *menor_p){
-
-	int i;
-	visitado[ini] = -1;
-	pilha = inserirPilha(pilha,ini);
-
-	for(i=0; i<gr->grau[ini]; i++){
-		if(!visitado[gr->arestas[ini][i]-1] && gr->nivel[gr->arestas[ini][i]-1] >= gr->nivel[ini]){
-			buscaProfundidade(gr, gr->arestas[ini][i]-1, visitado, cont+1, pilha, maior_p, menor_p);
-		}
-	}
-	
-	if(ini == 80){
-		if(cont > maior_p->qtd_elementos){
-			free(maior_p->caminho);
-			maior_p->caminho=NULL;
-			copiarPilha(&pilha,&maior_p->caminho);
-			maior_p->qtd_elementos=cont;
-		}
-
-		if(cont < menor_p->qtd_elementos){
-			free(menor_p->caminho);
-			menor_p->caminho=NULL;
-			copiarPilha(&pilha,&menor_p->caminho);
-			menor_p->qtd_elementos=cont;
-		}
-	}
-	removerPilha(&pilha);
-	visitado[ini] = 0;
-}
-void buscaProfundidade_Grafo(Grafo *gr, int ini, int *visitado, int possibilidades){
-
-	maior_pilha *maior_p = (maior_pilha*)malloc(sizeof(maior_pilha));
-	maior_p->qtd_elementos = 0;
-	maior_p->caminho = NULL;
-
-	maior_pilha *menor_p = (maior_pilha*)malloc(sizeof(maior_pilha));
-	menor_p->qtd_elementos = INFINITY;
-	menor_p->caminho = NULL;
-
-	PILHA *pilha = (PILHA*)malloc(sizeof(PILHA));
-	pilha = NULL;
-	
-	int i, cont = 0;
-	for(i=0; i<gr->nro_vertices; i++){
-		visitado[i] = 0;
-	}
-
-	buscaProfundidade(gr, ini, visitado, cont, pilha, maior_p, menor_p);
-
-	printf("\nMaior Caminho: ");
-	mostrarPilha(maior_p->caminho);
-	printf("\nQuantidade de cidades: %f\n",maior_p->qtd_elementos);
-
-	printf("\nMenor Caminho: ");
-	mostrarPilha(menor_p->caminho);
-	printf("\nQuantidade de cidades: %f\n",menor_p->qtd_elementos);
-}
-
-
 //Funções para colocar nivel nos vertices do grafo.
 Fila *appendFila(Fila *F, int raiz){
     Fila *novo, *aux;
@@ -278,64 +164,70 @@ Fila *appendFila(Fila *F, int raiz){
     }
     return F;
 }
-Fila *deleteFila(Fila *F){
+Fila *deleteFila(Fila **F){
     Fila *aux;
-    aux = F->prox;
-    F = NULL;
-    free(F);
+    aux = (*F);
+    (*F) = (*F)->prox;
     return aux;
 }
-void LiberaF(Fila **p){
-    if(*p==NULL){
-        *p=NULL;
-    }else{
-        LiberaF(&(*p)->prox);
-        Fila *aux=*p;
-        *p=NULL;
-        free(aux);
-    }
-}
-void copiaFila(Fila **p1,Fila **p2){
-    Fila *aux=(Fila*)malloc(sizeof(Fila));
-    if(*p1 == NULL){
-        *p2 = NULL;
-    }else{
-        copiaFila(&(*p1)->prox,p2);
-        aux->vertice = (*p1)->vertice;
-        aux->prox=*p2;
-        *p2 = aux;
-    }
-}
-void nivelLargura(Grafo *gr, int ini){
-	int *pontVertice, *visitados;
-	int altura=0, vertice, contido;
-	Fila *visitar = NULL, *aux = NULL;
 
-	visitar = appendFila(visitar, 0);
+//MUDAR ESCOPO DA FUNÇÃO (Nomes)
+void append(int **copia, int valor, int local){
+    int i;
+    int NUM_VERTS = 81;
+    for(i = 0; i < NUM_VERTS && copia[local][i] != 0; i++);
+    if(i < NUM_VERTS) copia[local][i] = valor;
+}
 
-	visitados = (int*)calloc(gr->nro_vertices, sizeof(int));
-    visitados[ini] = 1;
-	
-	visitar = appendFila(visitar, ini);
-	
-	do{
-		LiberaF(&aux);
-		while(visitar != NULL){
-			vertice = visitar->vertice;
-			pontVertice = gr->arestas[vertice];
-			for(int i=0; i<gr->grau[vertice]; i++){
-				contido = pontVertice[i]-1;
-				if(visitados[contido]==0){
-					visitados[contido] = 1;
-					aux = appendFila(aux, contido);
-				}
-			}
-			gr->nivel[vertice] = altura;
-			visitar = deleteFila(visitar);
-		}
-		copiaFila(&aux, &visitar);
-		altura++;
-	}while(aux!=NULL);
+//MUDAR ESCOPO DA FUNÇÃO (Nomes)
+void montaRota(int *predecessor, int origem, int **dictROTA, int final, int local){
+    for(int i = 0; final != -1; i++){
+        append(dictROTA, final, local);
+        final = predecessor[final-1];
+    }   
+}
+
+
+void dijskstra(Grafo *gr, int orig, int dest, int **dictROTA, int* dist, int* predecessor){
+    
+    Fila *visitar;
+    visitar = NULL;
+    dist[orig-1] = 0;
+    visitar = appendFila(visitar, orig);
+
+    while(visitar != NULL){
+        Fila *aux; 
+        aux = deleteFila(&visitar);
+        for(int i = 0; i < gr->grau[aux->vertice-1]; i++){
+            int aresta_i = gr->arestas[aux->vertice-1][i] - 1;
+            if(dist[aresta_i] > dist[aux->vertice-1] + gr->pesos[aux->vertice-1][i]){  
+                dist[aresta_i] = (dist[aux->vertice-1]) + gr->pesos[aux->vertice-1][i];
+                predecessor[aresta_i] = aux->vertice;
+                visitar = appendFila(visitar, gr->arestas[aux->vertice-1][i]);
+            }
+        }
+    }
+    if(gr!=NULL)
+    	montaRota(predecessor, orig, dictROTA, dest, 0);
+}
+void chamar_dijkstra(Grafo *gr, int dest){
+	int *dist = (int*) calloc(81, sizeof(int));
+	int *predecessor = (int*) calloc(81, sizeof(int));
+    int i;
+    for(i = 0; i <= 81; i++){
+    	dist[i] = INT_MAX/2;
+    	predecessor[i] = -1;
+    }
+    int **dictROTA;
+    dictROTA = malloc(sizeof(int *));
+    dictROTA[0] = calloc(81, sizeof(int));
+    dictROTA[1] = calloc(81, sizeof(int));
+	dijskstra(gr, 81, dest, dictROTA, dist, predecessor);
+
+
+	for(i = 0; dictROTA[0][i] != 0; i++)
+		printf("%d ", dictROTA[0][i]);
+	printf("|= %d\n",i - 1);
 }
 
 //Converter entrada do usuario
@@ -350,141 +242,19 @@ int equivalente(int **estadoTorre, int *vet){
     return resul;
 }
 
-
-/*
-	void inicializaD(Grafo *gr, int *d, int *p, int s){
-		int v;
-		for(v=0; v < gr->nro_vertices; v++){
-			d[v] = INFINITY;
-			p[v] = -1;
-		}
-		d[s] = 0;
-	}
-	void relaxa(Grafo *gr, int *d, int *p, int u, int v){
-		ADJACENCIA *ad = gr->grau[u].cab;
-		while(ad && ad->vertice != v)
-			ad = ad->prox;
-		if( ad ){
-			if( d[v] > d[u] + 1){
-				d[v] = d[u] + 1;
-				p[v] = u;
-			}
-		}
-	}
-	int *buscaDijkstra(Grafo *gr, int s){
-		int *d = (int*) malloc(gr->nro_vertices*sizeof(int));
-		int p[gr->nro_vertices];
-		bool aberto[gr->nro_vertices];
-
-		inicializaD(gr,d,p,s);
-
-		for(int i=0; i< gr->nro_vertices; i++)
-			aberto[i] = true;
-
-		while( existeAberto(gr, aberto)) {
-			int u = menorDist(gr, aberto, d);
-			aberto[u] = false;
-			ADJACENCIA *ad = gr->grau[u].cab;
-			while( ad ){
-				relaxa(gr, d, p, u, ad->vertice);
-				ad = ad->prox;
-			}
-		}
-		return d;
-	}
-	void buscaDijkstra_Grafo(Grafo *gr, int ini){
-		// SUBSTITUIR 0 por INI
-		int *r = buscaDijkstra(gr, 0);
-	}
-*/
-
-/*
-	bool existeAberto(Grafo *gr, MapDij *mapa){
-		for(int i=0; i< gr->nro_vertices; i++){
-			if(mapa[i].aberto) return true;
-		}
-		return false;
-	}
-
-	int menorDist(Grafo *gr, MapDij *mapa){
-		int i;
-		for(i=0; i<gr->nro_vertices; i++)
-			if(mapa[i].aberto) break;
-		if( i== gr->nro_vertices) return -1;
-		int menor = i;
-		for(i = menor+1; i< gr->nro_vertices; i++)
-			if(mapa[i].aberto && mapa[menor].d_menor > mapa[i].d_menor)
-				menor = i;
-		return menor;
-	}
-
-	MapDij* criar_mapa(int possibilidades){
-		MapDij *mapa = (MapDij*) malloc(possibilidades * sizeof(MapDij));
-		for(int x=0; x<possibilidades; x++){
-			mapa[x].aberto = true;
-			mapa[x].anterior = -1;
-			mapa[x].d_menor = INFINITY;
-		}
-		mapa[80].d_menor = 0;
-		return mapa;
-	}
-
-	void relaxa(Grafo *gr, MapDij *mapa, int u, int v){	
-		
-		int i=0;
-		while(i<gr->grau[u] && gr->arestas[u][i] != v){
-			i++;
-		}
-		if(mapa[v].d_menor > mapa[u].d_menor+1){
-			mapa[v].d_menor = mapa[u].d_menor+1;
-			mapa[v].anterior = u;
-		}
-	}
-
-	void construirDijkstra(Grafo *gr, MapDij *mapa){
-		while(existeAberto(gr, mapa)){
-			int u = menorDist(gr, mapa);
-			printf("ok\n");
-			mapa[u].aberto = false;
-
-			for(int i=0; i<gr->grau[u]; i++){
-				if(gr->nivel[gr->arestas[u][i]-1] >= gr->nivel[u])
-				relaxa(gr, mapa, u, gr->arestas[u][i]);
-				//if(!visitado[gr->arestas[ini][i]-1] && gr->nivel[gr->arestas[ini][i]-1] >= gr->nivel[ini])
-					//buscaProfundidade(gr, gr->arestas[ini][i]-1, visitado, cont+1, pilha, maior_p, menor_p);
-			}
-		}
-	}
-*/
-
-
-void buscaDijkstra(Grafo *gr, MapDij *mapa){
-	visitar = appendFila(visitar, 0);
-	
-
-
-}
-
-
-
 int main(){
  	
 	int possibilidades = pow(pinos,discos);
 	
 	int **estadoTorre = gerarPossibilidades(possibilidades);
 
- 	Grafo *grafo = cria_Grafo(possibilidades,pinos, 0);
+ 	Grafo *grafo = cria_Grafo(possibilidades,pinos, 1);
 	
 	int *visitados = (int*) calloc(possibilidades+1, sizeof(int));
 	
 	construirGrafo(grafo, estadoTorre, possibilidades);
 
-	nivelLargura(grafo,0);
-
-	//DIJKSTRA
-	MapDij *mapa = criar_mapa(possibilidades);
-
-	construirDijkstra(grafo, mapa);
+	/*
 	for(int i=0; i<grafo->nro_vertices; i++){
 		printf("%d {%d}|",i+1, grafo->nivel[i]);
 		for(int y =0; y< grafo->grau[i]; y++){
@@ -493,17 +263,19 @@ int main(){
 		printf("\n");
 	}
 
-	for(int i=0; i<grafo->nro_vertices; i++)
+	for(int i=0; i<grafo->nro_vertices; i++){
 		//printf(" %d |{%d} {%d} {%d}\n",i, mapa[i].d_menor, mapa[i].anterior, mapa[i].aberto );
+	}
+	*/
 
-	/*
+	
 	int vet[4];
 	printf("Digite  posição de inicio (Ex: [1 1 1 1]): ");
 	scanf("%d %d %d %d", &vet[0], &vet[1], &vet[2], &vet[3]);
 	
 	int inicio = equivalente(estadoTorre,vet);
 	printf("Inicio: %d (%d)\n",inicio+1,inicio );
-	buscaProfundidade_Grafo(grafo, inicio, visitados, possibilidades);
-	*/
+	
+	chamar_dijkstra(grafo, inicio+1);
 	return 0;
 }
