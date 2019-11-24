@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <limits.h>
 #include<stdbool.h>
 #define discos 4
 #define pinos 3
@@ -17,20 +18,11 @@ typedef struct{
     int nivel[81];
 }Grafo;
 
-
 typedef struct fila Fila;
 struct fila{
     int vertice;
     struct fila *prox;    
 };
-
-typedef struct{
-    bool aberto;
-    int anterior;
-    int d_menor;
-}MapDij;
-
-
 
 //Funçõs para criar o grafo e gerar os estados da torre de hanói
 Grafo* cria_Grafo(int nro_vertices, int grau_max, int eh_ponderado){
@@ -157,81 +149,72 @@ void construirGrafo(Grafo *grafo, int **estadoTorre, int possibilidades){
     }
 }
 
-
 //Funções para colocar nivel nos vertices do grafo.
-Fila *appendFila(Fila *F, int raiz){
-    Fila *novo, *aux;
-    novo = (Fila*)malloc(sizeof(Fila));
-    novo->vertice = raiz;
-    if(F==NULL){
-        F = novo;
-        novo->prox = NULL;
-    }else{
-        for(aux=F; aux->prox!=NULL; aux=aux->prox);
-        aux->prox=novo;
-        novo->prox = NULL;
-    }
-    return F;
-}
-Fila *deleteFila(Fila *F){
-    Fila *aux;
-    aux = F->prox;
-    F = NULL;
-    free(F);
-    return aux;
-}
-void LiberaF(Fila **p){
-    if(*p==NULL){
-        *p=NULL;
-    }else{
-        LiberaF(&(*p)->prox);
-        Fila *aux=*p;
-        *p=NULL;
-        free(aux);
-    }
-}
-void copiaFila(Fila **p1,Fila **p2){
-    Fila *aux=(Fila*)malloc(sizeof(Fila));
-    if(*p1 == NULL){
-        *p2 = NULL;
-    }else{
-        copiaFila(&(*p1)->prox,p2);
-        aux->vertice = (*p1)->vertice;
-        aux->prox=*p2;
-        *p2 = aux;
-    }
-}
-void nivelLargura(Grafo *gr, int ini){
-    int *pontVertice, *visitados;
-    int altura=0, vertice, contido;
-    Fila *visitar = NULL, *aux = NULL;
 
-    visitar = appendFila(visitar, 0);
 
-    visitados = (int*)calloc(gr->nro_vertices, sizeof(int));
-    visitados[ini] = 1;
-    
-    visitar = appendFila(visitar, ini);
-    
-    do{
-        LiberaF(&aux);
-        while(visitar != NULL){
-            vertice = visitar->vertice;
-            pontVertice = gr->arestas[vertice];
-            for(int i=0; i<gr->grau[vertice]; i++){
-                contido = pontVertice[i]-1;
-                if(visitados[contido]==0){
-                    visitados[contido] = 1;
-                    aux = appendFila(aux, contido);
-                }
+//MUDAR ESCOPO DA FUNÇÃO (Nomes)
+void append(int **copia, int valor, int local){
+    int i;
+    int NUM_VERTS = 81;
+    for(i = 0; i < NUM_VERTS && copia[local][i] != 0; i++);
+    if(i < NUM_VERTS) copia[local][i] = valor;
+}
+
+//MUDAR ESCOPO DA FUNÇÃO (Nomes)
+void montaRota(int *predecessor, int origem, int **dictROTA, int final, int local){
+    for(int i = 0; final != -1; i++){
+        append(dictROTA, final, local);
+        final = predecessor[final-1];
+    }   
+}
+
+
+void BellmanFord(Grafo **gr, int origem, int destino, int **rotaFinal){ 
+    int V = (*gr)->nVertices; 
+    int E = pow(PINOS, DISCOS); 
+    int dist[V]; 
+  
+    // Step 1: Initialize distances from origem to all other vertices 
+    // as INFINITE 
+    for (int i = 0; i < V; i++) 
+        dist[i] = INT_MAX; 
+    dist[origem] = 0; 
+  
+    // Step 2: Relax all edges |V| - 1 times. A simple shortest 
+    // path from origem to any other vertex can have at-most |V| - 1 
+    // edges 
+    for (int i = 1; i <= V - 1; i++) { 
+        for (int j = 0; j < E; j++) { 
+            int u = j;
+            for (int k = 0; k < (*gr)->grau[u]; k++) { 
+                int v = (*gr)->arestas[j][k]; 
+                int weight = (*gr)->pesos[j][k]; 
+                if (dist[u] != INT_MAX && dist[u] + weight < dist[v]) 
+                    dist[v] = dist[u] + weight;
             }
-            gr->nivel[vertice] = altura;
-            visitar = deleteFila(visitar);
+        } 
+    } 
+  
+    // Step 3: check for negative-weight cycles.  The above step 
+    // guarantees shortest distances if gr doesn't contain 
+    // negative weight cycle.  If we get a shorter path, then there 
+    // is a cycle. 
+    for (int i = 0; i < E; i++) { 
+        int u = i; 
+        for (int j = 0; j < (*gr)->grau[u]; j++){ 
+            int v = (*gr)->arestas[i][j]; 
+            int weight = (*gr)->pesos[i][j];
+            if (dist[u] != INT_MAX && dist[u] + weight < dist[v]) { 
+                printf("gr contains negative weight cycle"); 
+                return; // If negative cycle is detected, simply return 
+            } 
         }
-        copiaFila(&aux, &visitar);
-        altura++;
-    }while(aux!=NULL);
-}
+    } 
+  
+    montaRota(gr, origem, rotaFinal, destino, 1); 
+  
+} 
+
 
 //Converter entrada do usuario
 int equivalente(int **estadoTorre, int *vet){
@@ -245,45 +228,40 @@ int equivalente(int **estadoTorre, int *vet){
     return resul;
 }
 
-
 int main(){
     
     int possibilidades = pow(pinos,discos);
     
     int **estadoTorre = gerarPossibilidades(possibilidades);
 
-    Grafo *grafo = cria_Grafo(possibilidades,pinos, 0);
+    Grafo *grafo = cria_Grafo(possibilidades,pinos, 1);
     
     int *visitados = (int*) calloc(possibilidades+1, sizeof(int));
     
     construirGrafo(grafo, estadoTorre, possibilidades);
 
-    nivelLargura(grafo,0);
-
-    printf("FALTA A BUSCA DE FORD MOORE BELLMAN\n");
-
-    //DIJKSTRA
-    //MapDij *mapa = criar_mapa(possibilidades);
-    //construirDijkstra(grafo, mapa);
+    /*
     for(int i=0; i<grafo->nro_vertices; i++){
-        //printf("%d {%d}|",i+1, grafo->nivel[i]);
+        printf("%d {%d}|",i+1, grafo->nivel[i]);
         for(int y =0; y< grafo->grau[i]; y++){
-            //printf("%d ",grafo->arestas[i][y]);
+            printf("%d ",grafo->arestas[i][y]);
         }
-        //printf("\n");
+        printf("\n");
     }
 
-    for(int i=0; i<grafo->nro_vertices; i++)
+    for(int i=0; i<grafo->nro_vertices; i++){
         //printf(" %d |{%d} {%d} {%d}\n",i, mapa[i].d_menor, mapa[i].anterior, mapa[i].aberto );
+    }
+    */
 
-    /*
+    
     int vet[4];
     printf("Digite  posição de inicio (Ex: [1 1 1 1]): ");
     scanf("%d %d %d %d", &vet[0], &vet[1], &vet[2], &vet[3]);
     
     int inicio = equivalente(estadoTorre,vet);
     printf("Inicio: %d (%d)\n",inicio+1,inicio );
-    buscaProfundidade_Grafo(grafo, inicio, visitados, possibilidades);
-    */
+    
+    chamar_dijkstra(grafo, inicio+1);
     return 0;
 }
