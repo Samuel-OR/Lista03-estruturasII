@@ -27,16 +27,11 @@ void setEntrada(FUNCIONARIO *func){
 		if(i != totalFunc)
 			printf("Inconsistência entre qtd de matriculas e qtd totalFunc.\n");
 	}
-	
 	/*
-	setbuf(stdin, NULL);
-	scanf("%s", (func->matricula));
-	setbuf(stdin, NULL);
-	scanf("%s", (func->nome));
-	setbuf(stdin, NULL);
-	scanf("%s", (func->funcao));
-	setbuf(stdin, NULL);
-	scanf("%f", &(func->salario));
+	setbuf(stdin, NULL); scanf("%s", (func->matricula));
+	setbuf(stdin, NULL); scanf("%s", (func->nome));
+	setbuf(stdin, NULL); scanf("%s", (func->funcao));
+	setbuf(stdin, NULL); scanf("%f", &(func->salario));
 	setbuf(stdin, NULL);
 	*/
 }
@@ -119,29 +114,21 @@ int main(){
 
 	FUNCIONARIO *func;
 	func = (FUNCIONARIO*) calloc(totalFunc, sizeof(FUNCIONARIO));
-	int colisoesA=0, posA;
-	int colisoesB=0, posB;
+	int colisoesA=0, posA, colisoesB=0, posB;
 	int *ocupadoA = (int*) calloc(tamanho, sizeof(int));
 	int *ocupadoB = (int*) calloc(tamanho, sizeof(int));
 
 	setEntrada(func);
 
 	for(int i=0; i<totalFunc; i++){
-		/*
-			if(i < tamanho){
-				posA = hashing_A(func[i].matricula, ocupadoA, &colisoesA, 0);
-				posB = hashing_B(func[i].matricula, ocupadoB, &colisoesB, 0);
-			}else{
-				posA = hashing_A(func[i].matricula, ocupadoA, &colisoesA, 1);
-				posB = hashing_B(func[i].matricula, ocupadoB, &colisoesB, 1);
-			}
-		*/
-		posA = hashing_A(func[i].matricula, ocupadoA, &colisoesA, cheio(ocupadoA));
-		posB = hashing_B(func[i].matricula, ocupadoB, &colisoesB, cheio(ocupadoB));
+			
+		posA = hashing_A(func[i].matricula, ocupadoA, &colisoesA, (i<tamanho)? 0:1);
+		posB = hashing_B(func[i].matricula, ocupadoB, &colisoesB, (i<tamanho)? 0:1);
+		//posA = hashing_A(func[i].matricula, ocupadoA, &colisoesA, cheio(ocupadoA));
+		//posB = hashing_B(func[i].matricula, ocupadoB, &colisoesB, cheio(ocupadoB));
 		ocupadoA[posA] = 1;
 		ocupadoB[posB] = 1;	
 	}
-
 	printf("Colisoes_A[%d]: %d\n",tamanho,colisoesA );
 	printf("Colisoes_B[%d]: %d\n\n",tamanho, colisoesB );
 	
@@ -157,17 +144,11 @@ int main(){
 	tamanho = 150;
 
 	for(int i=0; i<totalFunc; i++){
-		/*
-			if(i < tamanho){
-				posA = hashing_A(func[i].matricula, ocupadoA, &colisoesA, 0);
-				posB = hashing_B(func[i].matricula, ocupadoB, &colisoesB, 0);
-			}else{
-				posA = hashing_A(func[i].matricula, ocupadoA, &colisoesA, 1);
-				posB = hashing_B(func[i].matricula, ocupadoB, &colisoesB, 1);
-			}
-		*/
-		posA = hashing_A(func[i].matricula, ocupadoA, &colisoesA, cheio(ocupadoA));
-		posB = hashing_B(func[i].matricula, ocupadoB, &colisoesB, cheio(ocupadoB));
+		
+		posA = hashing_A(func[i].matricula, ocupadoA, &colisoesA,  (i<tamanho)? 0:1);
+		posB = hashing_B(func[i].matricula, ocupadoB, &colisoesB,  (i<tamanho)? 0:1);	
+		//posA = hashing_A(func[i].matricula, ocupadoA, &colisoesA, cheio(ocupadoA));
+		//posB = hashing_B(func[i].matricula, ocupadoB, &colisoesB, cheio(ocupadoB));
 		ocupadoA[posA] = 1;
 		ocupadoB[posB] = 1;
 	}
