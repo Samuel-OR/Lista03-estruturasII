@@ -171,23 +171,6 @@ Fila *deleteFila(Fila **F){
     return aux;
 }
 
-/*
-	void adicionarVertice(int **copia, int valor, int local){
-	    int i;
-	    int NUM_VERTS = 81;
-	    for(i = 0; i < NUM_VERTS && copia[local][i] != 0; i++);
-	    if(i < NUM_VERTS) copia[local][i] = valor;
-	}
-	void salvarMelhorCaminho(int *predecessor, int origem, int **dictROTA, int final, int local){
-	    //printf("1 ");
-	    for(int i = 0; final != -1; i++){
-	    	//printf("%d ", predecessor[final-1]);
-	        adicionarVertice(dictROTA, final, local);
-	        final = predecessor[final-1];
-	    }   
-	    printf("\n");
-	}
-*/
 void dijskstra(Grafo *gr, int orig, int* dist, int* predecessor){
     
     Fila *visitar;
@@ -268,7 +251,6 @@ int main(){
 	}
 	*/
 
-	
 	int vet[4];
 	printf("Digite  posição de inicio (Ex: [1 1 1 1]): ");
 	scanf("%d %d %d %d", &vet[0], &vet[1], &vet[2], &vet[3]);
@@ -277,5 +259,6 @@ int main(){
 	printf("Inicio: %d (%d)\n",inicio+1,inicio );
 	
 	chamar_dijkstra(grafo, inicio+1);
+
 	return 0;
 }
