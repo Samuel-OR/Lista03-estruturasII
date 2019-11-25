@@ -210,8 +210,8 @@ int equivalente(int **estadoTorre, int *vet){
 
 int main(){
 
-    
-    
+    struct timeval tempo_inicial, tempo_final;
+    float tempo_total;
 
     int possibilidades = pow(pinos,discos);
     
@@ -230,13 +230,13 @@ int main(){
     int inicio = equivalente(estadoTorre,vet);
     printf("Inicio: %d \n",inicio+1);
     
-    
+    gettimeofday(&tempo_inicial, NULL);
     
     bellmanFord(grafo, inicio);  
 
-    
-    
-    
+    gettimeofday(&tempo_final, NULL);
+    tempo_total = (tempo_final.tv_sec - tempo_inicial.tv_sec) * (int)1e6 + (tempo_final.tv_usec - tempo_inicial.tv_usec);
+    printf("TEMPO TOTAL: %.3f microsegundos\n", tempo_total);
 
     return 0;
 }
