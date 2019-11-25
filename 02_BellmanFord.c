@@ -1,11 +1,12 @@
-#include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 #include <limits.h>
-#include<stdbool.h>
+#include<sys/time.h>
 #define discos 4
 #define pinos 3
+
+int **estadoTorre;
 
 typedef struct{
     int nro_vertices;
@@ -14,15 +15,15 @@ typedef struct{
     float** pesos;
     int* grau;
     int grau_max;
-
     int nivel[81];
 }Grafo;
 
-typedef struct fila Fila;
-struct fila{
-    int vertice;
-    struct fila *prox;    
-};
+//COLETAR TEMPO EM MICROSEGUNDOS
+long getMicrotime(){
+    struct timeval currentTime;
+    gettimeofday(&currentTime, NULL);
+    return currentTime.tv_sec * (int)1e6 + currentTime.tv_usec;
+}
 
 //Funçõs para criar o grafo e gerar os estados da torre de hanói
 Grafo* cria_Grafo(int nro_vertices, int grau_max, int eh_ponderado){
@@ -142,79 +143,58 @@ void construirGrafo(Grafo *grafo, int **estadoTorre, int possibilidades){
     for(int x = 0; x<possibilidades; x++){
         for(int y = 0; y<possibilidades; y++){
             if(compararEstadoTorre(estadoTorre[x], estadoTorre[y]) == 1){
-                insereAresta(grafo, x+1, y+1, 1, 0);
+                insereAresta(grafo, x+1, y, 1, 0);
             }
         }
 
     }
 }
 
-//Funções para colocar nivel nos vertices do grafo.
-
-
-//MUDAR ESCOPO DA FUNÇÃO (Nomes)
-void append(int **copia, int valor, int local){
-    int i;
-    int NUM_VERTS = 81;
-    for(i = 0; i < NUM_VERTS && copia[local][i] != 0; i++);
-    if(i < NUM_VERTS) copia[local][i] = valor;
+void mostrarCaminho(int *dist, int *predecessor, int node, int *cont){
+    if(dist[node]!=0){
+        *cont += 1;
+        mostrarCaminho(dist, predecessor, predecessor[node], cont);
+    }
+    printf("%d |[", 1+node);
+    for(int z=0; z<4; z++){
+        printf("%d ",estadoTorre[node][z] );
+    }
+    printf("]\n");
 }
 
-//MUDAR ESCOPO DA FUNÇÃO (Nomes)
-void montaRota(int *predecessor, int origem, int **dictROTA, int final, int local){
-    for(int i = 0; final != -1; i++){
-        append(dictROTA, final, local);
-        final = predecessor[final-1];
-    }   
-}
+void bellmanFord(Grafo *gr, int orig){
+    int cost = 0;
+    int flag = 1;
+    int predecessor[81], dist[81];
 
+    for (int i = 0; i < 81; i++){ 
+        dist[i] = INT_MAX/2;
+    }
 
-void BellmanFord(Grafo **gr, int origem, int destino, int **rotaFinal){ 
-    int V = (*gr)->nVertices; 
-    int E = pow(PINOS, DISCOS); 
-    int dist[V]; 
-  
-    // Step 1: Initialize distances from origem to all other vertices 
-    // as INFINITE 
-    for (int i = 0; i < V; i++) 
-        dist[i] = INT_MAX; 
-    dist[origem] = 0; 
-  
-    // Step 2: Relax all edges |V| - 1 times. A simple shortest 
-    // path from origem to any other vertex can have at-most |V| - 1 
-    // edges 
-    for (int i = 1; i <= V - 1; i++) { 
-        for (int j = 0; j < E; j++) { 
-            int u = j;
-            for (int k = 0; k < (*gr)->grau[u]; k++) { 
-                int v = (*gr)->arestas[j][k]; 
-                int weight = (*gr)->pesos[j][k]; 
-                if (dist[u] != INT_MAX && dist[u] + weight < dist[v]) 
-                    dist[v] = dist[u] + weight;
+    dist[orig] = 0;
+    predecessor[orig]= orig;
+    for(int i=0; i<80 && flag==1;i++){ //parar quando não houver alterações ou iterar n-1 vezes
+        flag = 0;
+
+        for(int x=0;x<81;x++){
+        
+            if( dist[x] != (INT_MAX/2) ){
+                for(int j=0;j< gr->grau[x];j++){
+                    if(dist[gr->arestas[x][j]] > (dist[x]+1)){
+                        predecessor[gr->arestas[x][j]] = x;
+                        dist[gr->arestas[x][j]] = dist[x]+1;
+                        flag = 1;
+                    }
+                }
             }
-        } 
-    } 
-  
-    // Step 3: check for negative-weight cycles.  The above step 
-    // guarantees shortest distances if gr doesn't contain 
-    // negative weight cycle.  If we get a shorter path, then there 
-    // is a cycle. 
-    for (int i = 0; i < E; i++) { 
-        int u = i; 
-        for (int j = 0; j < (*gr)->grau[u]; j++){ 
-            int v = (*gr)->arestas[i][j]; 
-            int weight = (*gr)->pesos[i][j];
-            if (dist[u] != INT_MAX && dist[u] + weight < dist[v]) { 
-                printf("gr contains negative weight cycle"); 
-                return; // If negative cycle is detected, simply return 
-            } 
         }
-    } 
-  
-    montaRota(gr, origem, rotaFinal, destino, 1); 
-  
-} 
+    }
 
+    printf("---------------------\n");
+    int cont=0;
+    mostrarCaminho(dist, predecessor,80, &cont);
+    printf("Qtd Vertices a percorrer: %d\n",cont );
+}
 
 //Converter entrada do usuario
 int equivalente(int **estadoTorre, int *vet){
@@ -229,10 +209,13 @@ int equivalente(int **estadoTorre, int *vet){
 }
 
 int main(){
+
     
+    
+
     int possibilidades = pow(pinos,discos);
     
-    int **estadoTorre = gerarPossibilidades(possibilidades);
+    estadoTorre = gerarPossibilidades(possibilidades);
 
     Grafo *grafo = cria_Grafo(possibilidades,pinos, 1);
     
@@ -240,28 +223,20 @@ int main(){
     
     construirGrafo(grafo, estadoTorre, possibilidades);
 
-    /*
-    for(int i=0; i<grafo->nro_vertices; i++){
-        printf("%d {%d}|",i+1, grafo->nivel[i]);
-        for(int y =0; y< grafo->grau[i]; y++){
-            printf("%d ",grafo->arestas[i][y]);
-        }
-        printf("\n");
-    }
-
-    for(int i=0; i<grafo->nro_vertices; i++){
-        //printf(" %d |{%d} {%d} {%d}\n",i, mapa[i].d_menor, mapa[i].anterior, mapa[i].aberto );
-    }
-    */
-
-    
     int vet[4];
     printf("Digite  posição de inicio (Ex: [1 1 1 1]): ");
     scanf("%d %d %d %d", &vet[0], &vet[1], &vet[2], &vet[3]);
     
     int inicio = equivalente(estadoTorre,vet);
-    printf("Inicio: %d (%d)\n",inicio+1,inicio );
+    printf("Inicio: %d \n",inicio+1);
     
-    chamar_dijkstra(grafo, inicio+1);
+    
+    
+    bellmanFord(grafo, inicio);  
+
+    
+    
+    
+
     return 0;
 }
