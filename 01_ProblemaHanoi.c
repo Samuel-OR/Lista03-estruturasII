@@ -1,9 +1,8 @@
-#include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 #include <limits.h>
-#include<stdbool.h>
+#include <sys/time.h>
 #define discos 4
 #define pinos 3
 
@@ -14,7 +13,6 @@ typedef struct{
 	float** pesos;
 	int* grau;
 	int grau_max;
-
 	int nivel[81];
 }Grafo;
 
@@ -23,6 +21,13 @@ struct fila{
     int vertice;
     struct fila *prox;    
 };
+
+//COLETAR TEMPO EM MICROSEGUNDOS
+long getMicrotime(){
+	struct timeval currentTime;
+	gettimeofday(&currentTime, NULL);
+	return currentTime.tv_sec * (int)1e6 + currentTime.tv_usec;
+}
 
 //Funçõs para criar o grafo e gerar os estados da torre de hanói
 Grafo* cria_Grafo(int nro_vertices, int grau_max, int eh_ponderado){
@@ -225,8 +230,12 @@ int equivalente(int **estadoTorre, int *vet){
     return resul;
 }
 
+
 int main(){
  	
+ 	struct timeval tempo_inicial, tempo_final;
+	float tempo_total;
+
 	int possibilidades = pow(pinos,discos);
 	
 	int **estadoTorre = gerarPossibilidades(possibilidades);
@@ -237,20 +246,6 @@ int main(){
 	
 	construirGrafo(grafo, estadoTorre, possibilidades);
 
-	/*
-	for(int i=0; i<grafo->nro_vertices; i++){
-		printf("%d {%d}|",i+1, grafo->nivel[i]);
-		for(int y =0; y< grafo->grau[i]; y++){
-			printf("%d ",grafo->arestas[i][y]);
-		}
-		printf("\n");
-	}
-
-	for(int i=0; i<grafo->nro_vertices; i++){
-		//printf(" %d |{%d} {%d} {%d}\n",i, mapa[i].d_menor, mapa[i].anterior, mapa[i].aberto );
-	}
-	*/
-
 	int vet[4];
 	printf("Digite  posição de inicio (Ex: [1 1 1 1]): ");
 	scanf("%d %d %d %d", &vet[0], &vet[1], &vet[2], &vet[3]);
@@ -258,7 +253,13 @@ int main(){
 	int inicio = equivalente(estadoTorre,vet);
 	printf("Inicio: %d (%d)\n",inicio+1,inicio );
 	
+	gettimeofday(&tempo_inicial, NULL);
+	
 	chamar_dijkstra(grafo, inicio+1);
+	
+	gettimeofday(&tempo_final, NULL);
+	tempo_total = (tempo_final.tv_sec - tempo_inicial.tv_sec) * (int)1e6 + (tempo_final.tv_usec - tempo_inicial.tv_usec);
+	printf("TEMPO TOTAL: %.3f microsegundos\n", tempo_total);
 
 	return 0;
 }
