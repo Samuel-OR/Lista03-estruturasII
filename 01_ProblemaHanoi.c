@@ -171,23 +171,23 @@ Fila *deleteFila(Fila **F){
     return aux;
 }
 
-//MUDAR ESCOPO DA FUNÇÃO (Nomes)
-void append(int **copia, int valor, int local){
-    int i;
-    int NUM_VERTS = 81;
-    for(i = 0; i < NUM_VERTS && copia[local][i] != 0; i++);
-    if(i < NUM_VERTS) copia[local][i] = valor;
-}
-
-//MUDAR ESCOPO DA FUNÇÃO (Nomes)
-void montaRota(int *predecessor, int origem, int **dictROTA, int final, int local){
-    for(int i = 0; final != -1; i++){
-        append(dictROTA, final, local);
-        final = predecessor[final-1];
-    }   
-}
-
-
+/*
+	void adicionarVertice(int **copia, int valor, int local){
+	    int i;
+	    int NUM_VERTS = 81;
+	    for(i = 0; i < NUM_VERTS && copia[local][i] != 0; i++);
+	    if(i < NUM_VERTS) copia[local][i] = valor;
+	}
+	void salvarMelhorCaminho(int *predecessor, int origem, int **dictROTA, int final, int local){
+	    //printf("1 ");
+	    for(int i = 0; final != -1; i++){
+	    	//printf("%d ", predecessor[final-1]);
+	        adicionarVertice(dictROTA, final, local);
+	        final = predecessor[final-1];
+	    }   
+	    printf("\n");
+	}
+*/
 void dijskstra(Grafo *gr, int orig, int dest, int **dictROTA, int* dist, int* predecessor){
     
     Fila *visitar;
@@ -207,14 +207,14 @@ void dijskstra(Grafo *gr, int orig, int dest, int **dictROTA, int* dist, int* pr
             }
         }
     }
-    if(gr!=NULL)
-    	montaRota(predecessor, orig, dictROTA, dest, 0);
+   //if(gr!=NULL)
+   //	salvarMelhorCaminho(predecessor, orig, dictROTA, dest, 0);
 }
 void chamar_dijkstra(Grafo *gr, int dest){
 	int *dist = (int*) calloc(81, sizeof(int));
 	int *predecessor = (int*) calloc(81, sizeof(int));
-    int i;
-    for(i = 0; i <= 81; i++){
+   
+    for(int i = 0; i <= 81; i++){
     	dist[i] = INT_MAX/2;
     	predecessor[i] = -1;
     }
@@ -224,10 +224,17 @@ void chamar_dijkstra(Grafo *gr, int dest){
     dictROTA[1] = calloc(81, sizeof(int));
 	dijskstra(gr, 81, dest, dictROTA, dist, predecessor);
 
-
-	for(i = 0; dictROTA[0][i] != 0; i++)
-		printf("%d ", dictROTA[0][i]);
-	printf("|= %d\n",i - 1);
+    printf("%d ", dest);
+    int final = dest, cont=0;
+    for(int i = 0; final != -1; i++){
+    	if(predecessor[final-1] != -1)
+    		printf("%d ", predecessor[final-1]);
+        final = predecessor[final-1];
+        cont++;
+    }   
+	//for(i = 0; dictROTA[0][i] != 0; i++)
+	//	printf("%d ", dictROTA[0][i]);
+	printf("|= %d\n", cont-1);
 }
 
 //Converter entrada do usuario
