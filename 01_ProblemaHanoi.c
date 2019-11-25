@@ -188,7 +188,7 @@ Fila *deleteFila(Fila **F){
 	    printf("\n");
 	}
 */
-void dijskstra(Grafo *gr, int orig, int dest, int **dictROTA, int* dist, int* predecessor){
+void dijskstra(Grafo *gr, int orig, int* dist, int* predecessor){
     
     Fila *visitar;
     visitar = NULL;
@@ -207,8 +207,6 @@ void dijskstra(Grafo *gr, int orig, int dest, int **dictROTA, int* dist, int* pr
             }
         }
     }
-   //if(gr!=NULL)
-   //	salvarMelhorCaminho(predecessor, orig, dictROTA, dest, 0);
 }
 void chamar_dijkstra(Grafo *gr, int dest){
 	int *dist = (int*) calloc(81, sizeof(int));
@@ -218,11 +216,8 @@ void chamar_dijkstra(Grafo *gr, int dest){
     	dist[i] = INT_MAX/2;
     	predecessor[i] = -1;
     }
-    int **dictROTA;
-    dictROTA = malloc(sizeof(int *));
-    dictROTA[0] = calloc(81, sizeof(int));
-    dictROTA[1] = calloc(81, sizeof(int));
-	dijskstra(gr, 81, dest, dictROTA, dist, predecessor);
+ 
+	dijskstra(gr, 81, dist, predecessor);
 
     printf("%d ", dest);
     int final = dest, cont=0;
@@ -232,8 +227,6 @@ void chamar_dijkstra(Grafo *gr, int dest){
         final = predecessor[final-1];
         cont++;
     }   
-	//for(i = 0; dictROTA[0][i] != 0; i++)
-	//	printf("%d ", dictROTA[0][i]);
 	printf("|= %d\n", cont-1);
 }
 
