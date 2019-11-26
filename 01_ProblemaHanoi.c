@@ -176,7 +176,7 @@ Fila *deleteFila(Fila **F){
     return aux;
 }
 
-void dijskstra(Grafo *gr, int orig, int* dist, int* predecessor){
+void Dijkstra(Grafo *gr, int orig, int* dist, int* predecessor){
     
     Fila *visitar;
     visitar = NULL;
@@ -205,7 +205,7 @@ void chamar_dijkstra(Grafo *gr, int dest){
     	predecessor[i] = -1;
     }
  
-	dijskstra(gr, 81, dist, predecessor);
+	Dijkstra(gr, 81, dist, predecessor);
 
     printf("%d ", dest);
     int final = dest, cont=0;
